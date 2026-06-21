@@ -1,0 +1,720 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>◊ FallSeed · Meta · Monitor for the estate</title>
+<meta name="description" content="fallseed-meta — the monitor seed for the FallSeed estate. Pulls the live registry, subscribes to cross-seed mesh, shows population grouped by level, parent→child lineage tree, live peers, and runs in-browser smoke tests against every seed URL. Single HTML PWA, IDB primary, MIT.">
+<meta name="prime" content="1279">
+<meta name="category" content="meta">
+<link rel="manifest" href="data:application/manifest+json,%7B%22name%22%3A%20%22FallSeed%20Meta%22%2C%20%22short_name%22%3A%20%22FallSeed-Meta%22%2C%20%22start_url%22%3A%20%22.%22%2C%20%22display%22%3A%20%22standalone%22%2C%20%22background_color%22%3A%20%22%230b0a0f%22%2C%20%22theme_color%22%3A%20%22%23b8974a%22%2C%20%22description%22%3A%20%22Monitor%20seed%20for%20the%20FallSeed%20estate%20%5Cu00b7%20population%20%5Cu00b7%20lineage%20%5Cu00b7%20mesh%20%5Cu00b7%20smoke%20test%22%2C%20%22icons%22%3A%20%5B%7B%22src%22%3A%20%22data%3Aimage/svg%2Bxml%3Butf8%2C%3Csvg%20xmlns%3D%27http%3A//www.w3.org/2000/svg%27%20viewBox%3D%270%200%2064%2064%27%3E%3Crect%20width%3D%2764%27%20height%3D%2764%27%20fill%3D%27%25230b0a0f%27/%3E%3Ctext%20x%3D%2732%27%20y%3D%2744%27%20text-anchor%3D%27middle%27%20font-size%3D%2740%27%20fill%3D%27%2523b8974a%27%20font-family%3D%27serif%27%20font-weight%3D%27bold%27%3E%5Cu25ca%3C/text%3E%3C/svg%3E%22%2C%20%22sizes%22%3A%20%22any%22%2C%20%22type%22%3A%20%22image/svg%2Bxml%22%7D%5D%7D">
+<style>
+:root{--void:#0b0a0f;--void-2:#13121a;--ink:#1a1922;--line:#2a2934;--line-soft:#1f1e28;--cream:#e6e1d6;--cream-dim:#a8a395;--cream-muted:#6e6a5e;--brass:#b8974a;--amber:#ff8c00;--ox:#8b1a1a;--green:#4ade80;--red:#ef4444;--blue:#60a5fa;--yellow:#fbbf24;--violet:#a855f7;--serif:Georgia,'Libre Baskerville',ui-serif,serif;--sans:'Inter',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;--mono:'IBM Plex Mono','SF Mono',ui-monospace,Menlo,monospace}
+*{margin:0;padding:0;box-sizing:border-box}html,body{background:var(--void);color:var(--cream);font:14px/1.55 var(--sans);min-height:100dvh;-webkit-font-smoothing:antialiased}
+button{font-family:inherit;cursor:pointer;background:transparent;border:none;color:inherit}
+input,textarea,select{font-family:inherit;background:var(--ink);border:1px solid var(--line);color:var(--cream);border-radius:3px;padding:8px 11px;outline:none;font-size:13px;width:100%}
+input:focus,textarea:focus,select:focus{border-color:var(--brass)}
+.app{min-height:100dvh;display:grid;grid-template-rows:64px 1fr}
+header{display:flex;align-items:center;border-bottom:1px solid var(--line);background:var(--void-2);user-select:none;padding:0 22px;gap:14px;position:sticky;top:0;z-index:50}
+.brand .mark{width:38px;height:38px;background:linear-gradient(135deg,var(--brass),var(--amber));border-radius:6px;display:grid;place-items:center;font-family:var(--serif);font-weight:700;font-size:22px;color:var(--void)}
+.brand{display:flex;align-items:center;gap:12px}
+.brand .name{font-family:var(--serif);font-weight:700;font-size:18px}
+.brand .seal{font-family:var(--mono);font-size:10px;color:var(--cream-muted);letter-spacing:.16em;text-transform:uppercase}
+nav.tabs{display:flex;flex:1;justify-content:center;gap:4px;flex-wrap:wrap;overflow-x:auto}
+nav.tabs button{padding:8px 14px;font-size:13px;color:var(--cream-dim);letter-spacing:.04em;border-radius:4px;white-space:nowrap}
+nav.tabs button:hover{color:var(--cream);background:var(--ink)}
+nav.tabs button.active{color:var(--brass);background:var(--ink);border-bottom:2px solid var(--brass)}
+.tier{padding:6px 12px;border-radius:3px;font-size:11px;color:var(--cream-dim);font-family:var(--mono);border:1px solid var(--line);letter-spacing:.06em;text-transform:uppercase}
+main{padding:24px 32px 80px;overflow-y:auto;max-width:1400px;margin:0 auto;width:100%}
+.hero{background:linear-gradient(135deg,rgba(184,151,74,.08),rgba(255,140,0,.04));border:1px solid var(--brass);border-radius:6px;padding:26px 28px;margin-bottom:20px}
+.hero h1{font-family:var(--serif);font-size:24px;font-weight:700;margin-bottom:8px;color:var(--brass)}
+.hero .lede{font-size:13px;color:var(--cream-dim);line-height:1.65;max-width:900px}
+.hero .v-badge{display:inline-block;background:var(--brass);color:var(--void);font-family:var(--mono);font-size:10px;letter-spacing:.12em;padding:3px 8px;border-radius:3px;margin-left:10px;vertical-align:middle}
+.section-h{display:flex;justify-content:space-between;align-items:baseline;margin:20px 0 12px;gap:14px;flex-wrap:wrap}
+.section-h h2{font-family:var(--serif);font-size:18px;font-weight:600}
+.section-h .sub{font-family:var(--mono);font-size:11px;color:var(--cream-muted);letter-spacing:.08em;text-transform:uppercase}
+.card{background:var(--void-2);border:1px solid var(--line);border-radius:5px;padding:16px 18px;margin-bottom:12px}
+.card h3{font-family:var(--serif);font-size:15px;font-weight:600;margin-bottom:8px}
+.btn{padding:7px 14px;border:1px solid var(--brass);border-radius:3px;font-size:12px;color:var(--cream);background:transparent}
+.btn:hover{border-color:var(--amber);color:var(--amber)}
+.btn.brass{background:var(--brass);color:var(--void);border-color:var(--brass);font-weight:600}
+.btn.brass:hover{background:var(--amber)}
+.btn.sm{padding:4px 10px;font-size:11px}
+.btn.ghost{border-color:var(--line);color:var(--cream-dim)}
+.btn.danger{border-color:var(--red);color:var(--red)}
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--brass);color:var(--void);padding:10px 20px;border-radius:3px;font-family:var(--mono);font-size:11px;letter-spacing:.06em;text-transform:uppercase;font-weight:700;opacity:0;transition:all .22s;z-index:1100;pointer-events:none}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.toast.err{background:var(--red);color:#fff}
+.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.66);display:none;align-items:flex-start;justify-content:center;z-index:1000;padding:60px 22px;overflow-y:auto}
+.modal-bg.open{display:flex}
+.modal{background:var(--void-2);border:1px solid var(--brass);border-radius:6px;padding:24px 26px;max-width:780px;width:100%;max-height:82vh;overflow-y:auto;position:relative}
+.modal h3{font-family:var(--serif);font-size:18px;margin-bottom:16px;color:var(--brass)}
+.modal .close{position:absolute;top:12px;right:14px;color:var(--cream-muted);font-size:22px;line-height:1}
+.modal .close:hover{color:var(--cream)}
+.inspect-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px;margin-bottom:14px}
+.inspect-card{background:var(--ink);border:1px solid var(--line);border-radius:4px;padding:14px;text-align:center}
+.inspect-card .num{font-family:var(--serif);font-size:26px;font-weight:700;color:var(--brass)}
+.inspect-card .lbl{font-family:var(--mono);font-size:10px;color:var(--cream-muted);letter-spacing:.1em;text-transform:uppercase;margin-top:4px}
+
+/* Population view */
+.level-group{margin-bottom:18px}
+.level-head{font-family:var(--mono);font-size:11px;color:var(--brass);letter-spacing:.08em;text-transform:uppercase;margin-bottom:8px;padding-bottom:6px;border-bottom:1px solid var(--line)}
+.seed-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:10px}
+.seed-card{background:var(--ink);border:1px solid var(--line);border-radius:4px;padding:14px 16px;cursor:pointer;transition:border-color .15s;position:relative}
+.seed-card:hover{border-color:var(--brass)}
+.seed-card .nm{font-family:var(--mono);color:var(--brass);font-size:12px;font-weight:600;margin-bottom:4px}
+.seed-card .desc{font-size:11px;color:var(--cream-dim);line-height:1.5;margin-bottom:8px;min-height:32px}
+.seed-card .meta{font-family:var(--mono);font-size:9px;color:var(--cream-muted);letter-spacing:.04em}
+.seed-card .meta b{color:var(--brass)}
+.status-dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--cream-muted);margin-right:6px;vertical-align:1px}
+.status-dot.up{background:var(--green)}
+.status-dot.down{background:var(--red)}
+.status-dot.checking{background:var(--yellow);animation:pulse 1s infinite}
+.status-dot.unknown{background:var(--cream-muted)}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+.online-flag{position:absolute;top:8px;right:10px;background:rgba(74,222,128,.18);color:var(--green);font-family:var(--mono);font-size:9px;padding:2px 7px;border-radius:9px;letter-spacing:.06em;font-weight:700}
+
+/* Lineage tree */
+.tree-root{padding:8px 0}
+.tree-node{padding:10px 14px;border:1px solid var(--line);border-radius:3px;background:var(--ink);margin-bottom:6px;cursor:pointer;transition:border-color .15s;display:grid;grid-template-columns:auto 1fr auto;gap:14px;align-items:center}
+.tree-node:hover{border-color:var(--brass)}
+.tree-node .lvl-badge{background:var(--brass);color:var(--void);font-family:var(--mono);font-size:9px;letter-spacing:.1em;padding:2px 7px;border-radius:9px;font-weight:700}
+.tree-node .lvl-badge.tool{background:rgba(168,85,247,.15);color:var(--violet);border:1px solid var(--violet)}
+.tree-node .nm{font-family:var(--mono);color:var(--brass);font-weight:600;font-size:13px}
+.tree-node .meta{font-family:var(--mono);font-size:10px;color:var(--cream-muted);letter-spacing:.04em;margin-top:3px}
+.tree-children{padding-left:24px;border-left:1px dashed var(--line);margin-left:20px;margin-top:4px;margin-bottom:8px}
+
+/* Mesh view */
+.peer-row{padding:10px 14px;border:1px solid var(--line);border-radius:3px;margin-bottom:6px;background:var(--ink);display:grid;grid-template-columns:auto 1fr auto auto;gap:14px;align-items:center}
+.peer-row .src{font-family:var(--mono);color:var(--brass);font-size:12px;font-weight:600}
+.peer-row .meta{font-family:var(--mono);font-size:10px;color:var(--cream-muted);letter-spacing:.04em;margin-top:3px}
+.peer-row .seen{font-family:var(--mono);font-size:10px;color:var(--green);letter-spacing:.04em}
+
+/* Smoke test */
+.smoke-row{padding:10px 14px;border:1px solid var(--line);border-radius:3px;margin-bottom:5px;background:var(--ink);display:grid;grid-template-columns:24px 1fr auto auto;gap:14px;align-items:center;font-family:var(--mono);font-size:11px}
+.smoke-row .icon{font-size:14px}
+.smoke-row .icon.pass{color:var(--green)}
+.smoke-row .icon.fail{color:var(--red)}
+.smoke-row .icon.pending{color:var(--cream-muted)}
+.smoke-row .icon.running{color:var(--yellow);animation:pulse 1s infinite}
+.smoke-row .nm{color:var(--cream)}
+.smoke-row .code{color:var(--cream-muted);font-size:10px}
+.smoke-row .timing{color:var(--cream-muted);font-size:10px}
+.smoke-summary{padding:14px 18px;border:1px solid var(--brass);border-radius:4px;background:linear-gradient(135deg,rgba(184,151,74,.06),transparent);margin-bottom:14px;font-family:var(--mono);font-size:12px}
+
+/* Visit (iframe) */
+.visit-bar{display:flex;gap:10px;margin-bottom:10px;align-items:center;flex-wrap:wrap}
+.visit-bar select{max-width:320px;flex:1}
+.iframe-wrap{border:1px solid var(--line);border-radius:4px;overflow:hidden;background:var(--void)}
+.iframe-wrap iframe{width:100%;height:720px;border:0;display:block;background:var(--void)}
+
+.empty-state{padding:32px 24px;text-align:center;color:var(--cream-muted);background:var(--ink);border:1px dashed var(--line);border-radius:5px;font-size:13px}
+.disclaimer{background:rgba(139,26,26,.12);border:1px solid var(--ox);border-left:3px solid var(--ox);border-radius:3px;padding:12px 16px;margin-bottom:16px;font-size:12px;line-height:1.55;color:var(--cream-dim)}
+.disclaimer strong{color:var(--brass)}
+
+.provider-row{display:grid;grid-template-columns:auto 90px 1fr 110px 80px;gap:10px;padding:10px 12px;border:1px solid var(--line);border-radius:3px;margin-bottom:6px;align-items:center;font-size:12px;background:var(--ink)}
+.provider-row .toggle{width:36px;height:20px;background:var(--line);border-radius:11px;position:relative;cursor:pointer;flex-shrink:0}
+.provider-row .toggle.on{background:var(--green)}
+.provider-row .toggle::after{content:'';position:absolute;width:16px;height:16px;background:var(--cream);border-radius:50%;top:2px;left:2px;transition:left .2s}
+.provider-row .toggle.on::after{left:18px}
+.provider-row .nm{font-family:var(--mono);font-size:11px;color:var(--cream);font-weight:600}
+.provider-row .tier-tag{font-family:var(--mono);font-size:9px;letter-spacing:.1em;padding:2px 6px;border-radius:3px;text-transform:uppercase;text-align:center}
+.provider-row .tier-tag.t1{background:rgba(74,222,128,.15);color:var(--green)}
+.provider-row .tier-tag.t2{background:rgba(96,165,250,.15);color:var(--blue)}
+.provider-row .tier-tag.tf{background:rgba(168,85,247,.15);color:var(--violet)}
+.provider-row .tier-tag.tp{background:rgba(255,140,0,.15);color:var(--amber)}
+.provider-row .key-input{padding:5px 8px;font-size:11px}
+.provider-row .status-mini{font-family:var(--mono);font-size:10px;color:var(--cream-muted);text-align:right}
+.preview-area{background:var(--ink);border:1px solid var(--line);border-radius:4px;padding:14px;font-family:var(--mono);font-size:11px;line-height:1.5;color:var(--cream-dim);white-space:pre-wrap;max-height:50vh;overflow:auto;min-height:180px}
+</style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <div class="brand">
+      <div class="mark">◊</div>
+      <div>
+        <div class="name">FallSeed · Meta</div>
+        <div class="seal">monitor · prime 1279 · MIT</div>
+      </div>
+    </div>
+    <nav class="tabs"></nav>
+    <div class="tier">v1.0</div>
+  </header>
+  <main id="main"></main>
+</div>
+<div class="toast" id="toast"></div>
+<div class="modal-bg" id="modalBg" onclick="if(event.target===this)closeModal()">
+  <div class="modal" id="modal">
+    <button class="close" onclick="closeModal()">×</button>
+    <h3 id="modalTitle"></h3>
+    <div id="modalBody"></div>
+  </div>
+</div>
+<script>
+'use strict';
+
+const TOOL = {
+  name: 'fallseed-meta',
+  version: '1.0.0',
+  prime: 1279,
+  meshChannel: 'fall-meta',
+  category: 'meta',
+  registryUrl: 'https://raw.githubusercontent.com/sjgant80-hub/fall-registry/main/index.json'
+};
+
+const PROVIDERS = [
+  { id:'webllm', name:'WebLLM', tier:'T1', tierLabel:'sovereign', priority:1, model:'Llama-3.2-3B-Instruct-q4f16_1-MLC', defaultEnabled:false, note:'In-browser via WebGPU' },
+  { id:'ollama', name:'Ollama (local)', tier:'T2', tierLabel:'sovereign', priority:2, endpoint:'http://localhost:11434/v1/chat/completions', model:'llama3.2', defaultEnabled:true, note:'localhost:11434' },
+  { id:'lmstudio', name:'LM Studio (local)', tier:'T2', tierLabel:'sovereign', priority:3, endpoint:'http://localhost:1234/v1/chat/completions', model:'loaded', defaultEnabled:true, note:'localhost:1234' },
+  { id:'groq', name:'Groq', tier:'T3-free', tierLabel:'free', priority:4, endpoint:'https://api.groq.com/openai/v1/chat/completions', model:'llama-3.3-70b-versatile', requiresKey:true, defaultEnabled:true, signupUrl:'https://console.groq.com/keys', note:'30 req/min · Llama 3.3 70B' },
+  { id:'openrouter-free', name:'OpenRouter free', tier:'T3-free', tierLabel:'free', priority:5, endpoint:'https://openrouter.ai/api/v1/chat/completions', model:'meta-llama/llama-3.3-70b-instruct:free', requiresKey:true, defaultEnabled:true, signupUrl:'https://openrouter.ai/keys', note:'Free 70B · 200 req/day' },
+  { id:'google', name:'Google AI Studio', tier:'T3-free', tierLabel:'free', priority:6, endpoint:'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:streamGenerateContent', model:'gemini-2.5-flash', requiresKey:true, defaultEnabled:true, signupUrl:'https://aistudio.google.com/apikey', note:'Gemini 2.5 Flash · 1M tokens/day' },
+  { id:'cerebras', name:'Cerebras', tier:'T3-free', tierLabel:'free', priority:7, endpoint:'https://api.cerebras.ai/v1/chat/completions', model:'llama-3.3-70b', requiresKey:true, defaultEnabled:true, signupUrl:'https://cloud.cerebras.ai/platform', note:'70B at ~2200 tok/sec' },
+  { id:'anthropic', name:'Anthropic', tier:'T3-paid', tierLabel:'paid', priority:8, endpoint:'https://api.anthropic.com/v1/messages', model:'claude-sonnet-4-20250514', requiresKey:true, paid:true, defaultEnabled:false, signupUrl:'https://console.anthropic.com/', note:'Sonnet 4 · highest quality codegen' }
+];
+
+const TABS = [
+  { id:'welcome',    label:'Welcome' },
+  { id:'population', label:'Population' },
+  { id:'lineage',    label:'Lineage tree' },
+  { id:'mesh',       label:'Live mesh' },
+  { id:'smoke',      label:'Smoke test' },
+  { id:'visit',      label:'Visit any seed' },
+  { id:'build',      label:'Build' },
+  { id:'providers',  label:'LLM Providers' },
+  { id:'inspect',    label:'Inspect' },
+  { id:'settings',   label:'Settings' },
+  { id:'install',    label:'Install' }
+];
+
+let state = {
+  active: 'welcome',
+  providerConfig: {},
+  usage: {},
+  registry: null,
+  registryFetchedAt: 0,
+  registryFetching: false,
+  smokeResults: {},     // {seedName: {status, code, ms}}
+  smokeRunning: false,
+  visitTarget: null,
+  cascadeTrace: [],
+  webllmEngine: null,
+  webllmStatus: 'unloaded'
+};
+
+const $ = (s,p=document) => p.querySelector(s);
+const $$ = (s,p=document) => [...p.querySelectorAll(s)];
+const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const now = () => Date.now();
+
+function toast(m, err) { const t=$('#toast'); t.textContent=m; t.classList.toggle('err',!!err); t.classList.add('show'); clearTimeout(t._to); t._to=setTimeout(()=>t.classList.remove('show'),2400); }
+function openModal(title, body) { $('#modalTitle').textContent=title; $('#modalBody').innerHTML=body; $('#modalBg').classList.add('open'); }
+function closeModal() { $('#modalBg').classList.remove('open'); }
+
+// ─── IDB ────────────────────────────────────────────────
+const IDB_NAME = 'fallseed-meta-v1';
+let db;
+function openDB() {
+  return new Promise((res, rej) => {
+    const r = indexedDB.open(IDB_NAME, 1);
+    r.onupgradeneeded = e => {
+      const d = e.target.result;
+      if (!d.objectStoreNames.contains('config')) d.createObjectStore('config');
+      if (!d.objectStoreNames.contains('smokeHistory')) d.createObjectStore('smokeHistory', { keyPath:'id' });
+    };
+    r.onsuccess = e => { db = e.target.result; res(db); };
+    r.onerror = rej;
+  });
+}
+function idbGet(s,k) { return new Promise(r => { const tx=db.transaction(s,'readonly'); const q=tx.objectStore(s).get(k); q.onsuccess=()=>r(q.result); }); }
+function idbGetAll(s) { return new Promise(r => { const tx=db.transaction(s,'readonly'); const q=tx.objectStore(s).getAll(); q.onsuccess=()=>r(q.result||[]); }); }
+function idbPut(s,v,k) { return new Promise(r => { const tx=db.transaction(s,'readwrite'); const o=tx.objectStore(s); const q=k!=null?o.put(v,k):o.put(v); q.onsuccess=()=>r(true); }); }
+function idbClear(s) { return new Promise(r => { const tx=db.transaction(s,'readwrite'); const q=tx.objectStore(s).clear(); q.onsuccess=()=>r(true); }); }
+
+async function loadAll() {
+  if (!db) await openDB();
+  state.providerConfig = await idbGet('config','providerConfig') || {};
+  state.usage = await idbGet('config','usage') || {};
+  for (const p of PROVIDERS) {
+    if (!(p.id in state.providerConfig)) state.providerConfig[p.id] = { enabled:p.defaultEnabled, key:'', customModel:'' };
+    if (!(p.id in state.usage)) state.usage[p.id] = { totalIn:0, totalOut:0, calls:0, lastUsed:0 };
+  }
+  await idbPut('config', state.providerConfig, 'providerConfig');
+  state.registry = await idbGet('config','registryCache') || null;
+  state.registryFetchedAt = await idbGet('config','registryCacheAt') || 0;
+}
+async function persistProviderConfig() { await idbPut('config', state.providerConfig, 'providerConfig'); }
+
+// ─── REGISTRY FETCH ─────────────────────────────────────
+async function fetchRegistry(force) {
+  if (state.registryFetching) return;
+  state.registryFetching = true;
+  try {
+    const url = TOOL.registryUrl + (force ? '?cb=' + Date.now() : '');
+    const r = await fetch(url, { cache: 'no-cache' });
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    const reg = await r.json();
+    state.registry = reg;
+    state.registryFetchedAt = Date.now();
+    await idbPut('config', reg, 'registryCache');
+    await idbPut('config', state.registryFetchedAt, 'registryCacheAt');
+    toast('registry refreshed · v' + reg.registryVersion);
+  } catch (e) {
+    toast('registry fetch failed: ' + e.message, true);
+  } finally {
+    state.registryFetching = false;
+    render();
+  }
+}
+
+// ─── MESH ──────────────────────────────────────────────
+window.__fellowSeeds = window.__fellowSeeds || new Map();
+window.__crossSeedHandlers = window.__crossSeedHandlers || {};
+window.__crossSeedPending = window.__crossSeedPending || new Map();
+let __sigChan = null, __pingTimer = null;
+function __seedSelfInfo() {
+  return { source:'fallseed-meta', name:TOOL.name, prime:TOOL.prime, version:TOOL.version, level:null, parent:null, mesh:TOOL.meshChannel, category:TOOL.category, ts:Date.now() };
+}
+window.__crossSeedHandlers['introspect'] = async function() { return { manifest:TOOL, peerCount:window.__fellowSeeds.size, ts:Date.now() }; };
+function __pruneFellowSeeds() { const cutoff = Date.now()-90000; for (const [k,v] of window.__fellowSeeds.entries()) if (v.lastSeen < cutoff) window.__fellowSeeds.delete(k); }
+function initMesh() {
+  try {
+    __sigChan = new BroadcastChannel('fall-signal');
+    __sigChan.postMessage({ type:'hello', ...__seedSelfInfo() });
+    __sigChan.onmessage = async (e) => {
+      const m = e.data||{}; if (!m.type) return;
+      const self = 'fallseed-meta';
+      if (m.type === 'hello' || m.type === 'pong') {
+        if (!m.source || m.source === self) return;
+        const ex = window.__fellowSeeds.get(m.source) || {};
+        window.__fellowSeeds.set(m.source, { ...ex, ...m, lastSeen: Date.now() });
+        if (state.active === 'mesh' || state.active === 'population' || state.active === 'lineage') try { render(); } catch(e) {}
+      } else if (m.type === 'ping') {
+        try { __sigChan.postMessage({ type:'pong', ...__seedSelfInfo() }); } catch(e) {}
+      } else if (m.type === 'request' && (m.to === self || m.to === '*') && m.from !== self) {
+        const handler = window.__crossSeedHandlers[m.kind]; if (!handler) return;
+        try { const result = await handler(m.payload||{}); __sigChan.postMessage({ type:'response', kind:m.kind, from:self, to:m.from, payload:result, reqId:m.reqId }); }
+        catch (err) { __sigChan.postMessage({ type:'response', kind:m.kind, from:self, to:m.from, payload:{error:err.message}, reqId:m.reqId }); }
+      } else if (m.type === 'response' && m.to === self) {
+        const p = window.__crossSeedPending.get(m.reqId);
+        if (p) { clearTimeout(p.timer); p.resolve(m.payload); window.__crossSeedPending.delete(m.reqId); }
+      }
+    };
+    __pingTimer = setInterval(()=>{ try { __sigChan.postMessage({type:'ping',...__seedSelfInfo()}); __pruneFellowSeeds(); if (state.active==='mesh') render(); } catch(e){} }, 10000); // faster ping for monitor
+  } catch(e) {}
+}
+async function crossSeedRequest(target, kind, payload, opts) {
+  opts = opts || {}; const reqId = 'r_' + Math.random().toString(36).slice(2,12);
+  return new Promise((resolve,reject) => {
+    const timer = setTimeout(()=>{ window.__crossSeedPending.delete(reqId); reject(new Error('timeout')); }, opts.timeoutMs||3000);
+    window.__crossSeedPending.set(reqId, { resolve, reject, timer });
+    try { __sigChan.postMessage({ type:'request', kind, from:'fallseed-meta', to:target, payload, reqId }); }
+    catch(e) { clearTimeout(timer); window.__crossSeedPending.delete(reqId); reject(e); }
+  });
+}
+window.crossSeedRequest = crossSeedRequest;
+async function autoDetectLocal() {
+  state.autoDetected = [];
+  await Promise.all([
+    fetch('http://127.0.0.1:11434/api/tags').then(r => r.ok).catch(()=>{}),
+    fetch('http://127.0.0.1:1234/v1/models').then(r => r.ok).catch(()=>{})
+  ]);
+}
+
+// ─── HELPERS ──────────────────────────────────────────
+function getSeeds() {
+  if (!state.registry?.apps) return [];
+  return state.registry.apps.filter(a => /^fallseed/.test(a.name||'') || /^fallrecall/.test(a.name||'') || a.category === 'seed');
+}
+function groupByLevel(seeds) {
+  const groups = { 0:[], 1:[], 2:[], 3:[], 4:[], tool:[] };
+  for (const s of seeds) {
+    const lv = s.level;
+    if (lv === 0 || lv === 1 || lv === 2 || lv === 3 || lv === 4) groups[lv].push(s);
+    else groups.tool.push(s);
+  }
+  return groups;
+}
+function levelLabel(lv) {
+  return { 0:'L0 · vertical seeds', 1:'L1 · domain seed', 2:'L2 · behaviour seed', 3:'L3 · actor seed', 4:'L4 · institution seed', tool:'tools · meta / sovereignty' }[lv] || ('level ' + lv);
+}
+function isOnline(name) {
+  return window.__fellowSeeds.has('fallseed-' + name) || window.__fellowSeeds.has(name);
+}
+
+// ─── ROUTER + TABS ────────────────────────────────────
+function renderNav() {
+  const nav = $('nav.tabs');
+  nav.innerHTML = TABS.map(t => `<button data-tab="${t.id}" class="${state.active===t.id?'active':''}">${t.label}</button>`).join('');
+  nav.querySelectorAll('button').forEach(b => b.addEventListener('click', () => switchTab(b.dataset.tab)));
+}
+function switchTab(id) { state.active=id; $$('nav.tabs button').forEach(b => b.classList.toggle('active', b.dataset.tab===id)); render(); }
+function render() {
+  const main = $('#main'); main.innerHTML='';
+  const fn = { welcome:renderWelcome, population:renderPopulation, lineage:renderLineage, mesh:renderMesh, smoke:renderSmoke, visit:renderVisit, build:renderBuild, providers:renderProviders, inspect:renderInspect, settings:renderSettings, install:renderInstall }[state.active] || renderWelcome;
+  fn(main);
+}
+
+// ─── WELCOME ───────────────────────────────────────────
+function renderWelcome(main) {
+  const seeds = getSeeds();
+  const peers = Array.from(window.__fellowSeeds.values());
+  const groups = groupByLevel(seeds);
+  main.innerHTML = `
+    <div class="hero">
+      <h1>◊ FallSeed · Meta <span class="v-badge">v${TOOL.version}</span></h1>
+      <p class="lede">The monitor seed for the estate. Pulls the live registry, subscribes to the cross-seed mesh, and shows you the population as a living thing — what exists, what's online right now, what the parent→child lineage looks like, and whether every URL still returns 200.</p>
+    </div>
+    <div class="inspect-grid">
+      <div class="inspect-card"><div class="num">${seeds.length}</div><div class="lbl">seeds in registry</div></div>
+      <div class="inspect-card"><div class="num">${Object.values(groups).filter(g=>g.length).length}</div><div class="lbl">tiers represented</div></div>
+      <div class="inspect-card"><div class="num">${peers.length}</div><div class="lbl">online right now</div></div>
+      <div class="inspect-card"><div class="num">v${state.registry?.registryVersion||'—'}</div><div class="lbl">registry version</div></div>
+      <div class="inspect-card"><div class="num">${state.registryFetchedAt ? Math.round((Date.now()-state.registryFetchedAt)/60000) + 'm' : '—'}</div><div class="lbl">since last fetch</div></div>
+    </div>
+    <div class="section-h"><h2>Get oriented</h2></div>
+    <div class="card">
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px">
+        <div><h3>Population</h3><p style="color:var(--cream-dim);font-size:12px;line-height:1.6;margin-bottom:10px">Every seed in the registry, grouped by level. Click any to visit, introspect, or smoke-test.</p><button class="btn brass sm" onclick="switchTab('population')">Open Population →</button></div>
+        <div><h3>Live mesh</h3><p style="color:var(--cream-dim);font-size:12px;line-height:1.6;margin-bottom:10px">Who's online right now via fall-signal. Updates every 10 seconds.</p><button class="btn brass sm" onclick="switchTab('mesh')">Open Mesh →</button></div>
+        <div><h3>Smoke test</h3><p style="color:var(--cream-dim);font-size:12px;line-height:1.6;margin-bottom:10px">Run in-browser HTTP checks against every seed URL. Catches deploy regressions immediately.</p><button class="btn brass sm" onclick="switchTab('smoke')">Open Smoke →</button></div>
+      </div>
+    </div>
+    ${!state.registry ? `<div class="card"><h3>No registry loaded</h3><p style="font-size:12px;color:var(--cream-dim);margin-bottom:10px">Click below to fetch from <code style="color:var(--brass)">${TOOL.registryUrl}</code></p><button class="btn brass" onclick="fetchRegistry(true)">⊕ fetch registry →</button></div>` : ''}
+  `;
+}
+
+// ─── POPULATION ────────────────────────────────────────
+function renderPopulation(main) {
+  const seeds = getSeeds();
+  if (!seeds.length) { main.innerHTML = '<div class="empty-state">No registry loaded. <button class="btn brass sm" onclick="fetchRegistry(true)">fetch now</button></div>'; return; }
+  const groups = groupByLevel(seeds);
+  main.innerHTML = `
+    <div class="section-h"><h2>Population</h2><div class="sub">${seeds.length} seeds · ${window.__fellowSeeds.size} online · registry v${state.registry?.registryVersion||'—'}</div></div>
+    <div style="display:flex;gap:8px;margin-bottom:14px"><button class="btn sm" onclick="fetchRegistry(true)">↻ refresh registry</button></div>
+    ${[0,1,2,3,4,'tool'].map(lv => {
+      const items = groups[lv] || [];
+      if (!items.length) return '';
+      return `<div class="level-group">
+        <div class="level-head">${esc(levelLabel(lv))} · ${items.length}</div>
+        <div class="seed-grid">
+          ${items.map(s => `<div class="seed-card" onclick="visitSeed('${esc(s.name)}')">
+            ${isOnline(s.name)?'<span class="online-flag">online</span>':''}
+            <div class="nm">${esc(s.name)}</div>
+            <div class="desc">${esc((s.description||'').slice(0,140))}${(s.description||'').length>140?'…':''}</div>
+            <div class="meta"><b>prime ${s.prime}</b> · L${s.level??'—'}${s.parent?' · ← '+esc(s.parent):''}${s.shipped?' · '+esc(s.shipped):''}</div>
+          </div>`).join('')}
+        </div>
+      </div>`;
+    }).join('')}
+  `;
+}
+window.visitSeed = function(name) {
+  state.visitTarget = name;
+  switchTab('visit');
+};
+
+// ─── LINEAGE TREE ──────────────────────────────────────
+function renderLineage(main) {
+  const seeds = getSeeds();
+  if (!seeds.length) { main.innerHTML = '<div class="empty-state">No registry loaded. <button class="btn brass sm" onclick="fetchRegistry(true)">fetch now</button></div>'; return; }
+  // Build child-of map
+  const byName = {};
+  for (const s of seeds) byName[s.name] = s;
+  const children = {};
+  const roots = [];
+  for (const s of seeds) {
+    if (s.parent && byName[s.parent]) {
+      (children[s.parent] = children[s.parent]||[]).push(s);
+    } else {
+      roots.push(s);
+    }
+  }
+  function renderNode(s) {
+    const kids = children[s.name] || [];
+    const lvBadge = s.level !== undefined && s.level !== null ? `<span class="lvl-badge">L${s.level}</span>` : `<span class="lvl-badge tool">tool</span>`;
+    return `<div class="tree-node" onclick="visitSeed('${esc(s.name)}')">
+      ${lvBadge}
+      <div>
+        <div class="nm">${esc(s.name)}</div>
+        <div class="meta">prime ${s.prime} · ${esc(s.category||'?')}${kids.length?' · '+kids.length+' child'+(kids.length===1?'':'ren'):''}${isOnline(s.name)?' · <span style="color:var(--green)">online</span>':''}</div>
+      </div>
+      <div></div>
+    </div>
+    ${kids.length ? `<div class="tree-children">${kids.map(renderNode).join('')}</div>` : ''}`;
+  }
+  main.innerHTML = `
+    <div class="section-h"><h2>Lineage tree</h2><div class="sub">${roots.length} root${roots.length===1?'':'s'} · parent→child graph</div></div>
+    <div class="card">
+      <p style="font-size:12px;color:var(--cream-dim);margin-bottom:14px">Roots (seeds with no parent) are at the top. Children are indented under their parents. Click any to visit.</p>
+      <div class="tree-root">
+        ${roots.map(renderNode).join('')}
+      </div>
+    </div>
+  `;
+}
+
+// ─── LIVE MESH ────────────────────────────────────────
+function renderMesh(main) {
+  const peers = Array.from(window.__fellowSeeds.values()).sort((a,b)=>(a.source||'').localeCompare(b.source||''));
+  main.innerHTML = `
+    <div class="section-h"><h2>Live mesh</h2><div class="sub">${peers.length} fellow seed${peers.length===1?'':'s'} online · fall-signal · 10s refresh</div></div>
+    <div class="disclaimer"><strong>How this works:</strong> every FallSeed opens BroadcastChannel('fall-signal') on boot and announces itself. Other seeds on the same origin listen. This view only shows seeds that are open in another tab of your browser right now, on this origin (sjgant80-hub.github.io).</div>
+    <div style="margin-bottom:14px;display:flex;gap:8px"><button class="btn sm" onclick="pingAll()">↻ ping all peers</button></div>
+    ${peers.length ? peers.map(p => `<div class="peer-row">
+      <div></div>
+      <div>
+        <div class="src">${esc(p.source||'?')}</div>
+        <div class="meta">prime ${esc(String(p.prime||'?'))} · v${esc(String(p.version||'?'))} · level ${esc(String(p.level??'?'))}${p.parent?' · forked from '+esc(p.parent):''}${p.mesh?' · '+esc(p.mesh):''}</div>
+      </div>
+      <div class="seen">${Math.max(0,Math.round((Date.now()-(p.lastSeen||0))/1000))}s ago</div>
+      <button class="btn sm" onclick="introspectPeer('${esc(p.source||'')}')">introspect →</button>
+    </div>`).join('') : '<div class="empty-state">No peers online. Open any FallSeed in a separate tab (any tab on sjgant80-hub.github.io) and it should appear here within 10 seconds.</div>'}
+  `;
+}
+window.pingAll = function() {
+  try { __sigChan.postMessage({ type:'ping', ...__seedSelfInfo() }); toast('ping broadcast · responses arrive within ~1s'); setTimeout(render, 1500); }
+  catch (e) { toast('mesh not available', true); }
+};
+window.introspectPeer = async function(target) {
+  if (!target) return;
+  toast('introspecting ' + target + '…');
+  try {
+    const res = await crossSeedRequest(target, 'introspect', {}, { timeoutMs: 3000 });
+    openModal('introspect: ' + target, `<div class="preview-area">${esc(JSON.stringify(res, null, 2))}</div>`);
+  } catch (e) { toast('failed: ' + e.message, true); }
+};
+
+// ─── SMOKE TEST ────────────────────────────────────────
+function renderSmoke(main) {
+  const seeds = getSeeds();
+  const results = state.smokeResults || {};
+  const passCount = Object.values(results).filter(r => r.status === 'pass').length;
+  const failCount = Object.values(results).filter(r => r.status === 'fail').length;
+  const total = seeds.length;
+  main.innerHTML = `
+    <div class="section-h"><h2>Smoke test</h2><div class="sub">${total} seeds · ${passCount} pass · ${failCount} fail</div></div>
+    <div class="disclaimer"><strong>What gets tested:</strong> each seed's live URL is fetched. HTTP status checked. Response body scanned for "FallSeed" or seed-name marker. Pass/fail recorded with timing. Runs entirely in your browser.</div>
+    <div class="smoke-summary">
+      <div>Last run: <span style="color:var(--brass)">${state.smokeLastRun ? new Date(state.smokeLastRun).toLocaleString() : 'never'}</span></div>
+      <div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap">
+        <button class="btn brass sm" onclick="runSmokeAll()" ${state.smokeRunning?'disabled':''}>${state.smokeRunning?'running…':'↻ run all (' + total + ')'}</button>
+        <button class="btn sm" onclick="clearSmoke()">clear results</button>
+      </div>
+    </div>
+    ${seeds.length ? seeds.map(s => {
+      const r = results[s.name];
+      const iconClass = r ? r.status : 'pending';
+      const icon = r ? (r.status==='pass'?'✓':r.status==='fail'?'✗':'…') : '·';
+      return `<div class="smoke-row">
+        <div class="icon ${iconClass}">${icon}</div>
+        <div>
+          <span class="nm">${esc(s.name)}</span>
+          <span class="code">  ${esc(s.url||'')}</span>
+        </div>
+        <div class="timing">${r?.ms?r.ms+'ms':''}</div>
+        <div>${r?.code?'HTTP '+r.code:''}${r?.error?' · '+esc(r.error.slice(0,40)):''}</div>
+      </div>`;
+    }).join('') : '<div class="empty-state">No registry loaded.</div>'}
+  `;
+}
+async function smokeOne(seed) {
+  const start = Date.now();
+  try {
+    const url = seed.url + '?cb=' + start;
+    state.smokeResults[seed.name] = { status: 'running' };
+    if (state.active === 'smoke') render();
+    const r = await fetch(url, { cache:'no-cache' });
+    const ms = Date.now() - start;
+    if (!r.ok) {
+      state.smokeResults[seed.name] = { status:'fail', code:r.status, ms, error:'HTTP ' + r.status };
+      return;
+    }
+    const text = await r.text();
+    const marker = /^fallseed/.test(seed.name) ? 'FallSeed' : /^fallrecall/.test(seed.name) ? 'fallrecall' : seed.name;
+    const passes = text.toLowerCase().includes(marker.toLowerCase());
+    state.smokeResults[seed.name] = passes ? { status:'pass', code:r.status, ms } : { status:'fail', code:r.status, ms, error:'marker missing' };
+  } catch (e) {
+    state.smokeResults[seed.name] = { status:'fail', error: e.message, ms: Date.now() - start };
+  }
+}
+window.runSmokeAll = async function() {
+  const seeds = getSeeds();
+  if (!seeds.length) { toast('no registry', true); return; }
+  state.smokeRunning = true; state.smokeResults = {};
+  render();
+  // Run in parallel batches of 4
+  const batchSize = 4;
+  for (let i = 0; i < seeds.length; i += batchSize) {
+    await Promise.all(seeds.slice(i, i+batchSize).map(s => smokeOne(s)));
+    if (state.active === 'smoke') render();
+  }
+  state.smokeRunning = false;
+  state.smokeLastRun = Date.now();
+  await idbPut('smokeHistory', { id: 'sh_' + Date.now(), ts: Date.now(), results: state.smokeResults });
+  const pass = Object.values(state.smokeResults).filter(r => r.status==='pass').length;
+  toast(`smoke done · ${pass}/${seeds.length} pass`);
+  if (state.active === 'smoke') render();
+};
+window.clearSmoke = function() { state.smokeResults = {}; state.smokeLastRun = null; render(); };
+
+// ─── VISIT (iframe) ────────────────────────────────────
+function renderVisit(main) {
+  const seeds = getSeeds();
+  if (!seeds.length) { main.innerHTML = '<div class="empty-state">No registry loaded.</div>'; return; }
+  if (!state.visitTarget) state.visitTarget = seeds.find(s => s.name === 'fallseed-hr')?.name || seeds[0].name;
+  const target = seeds.find(s => s.name === state.visitTarget) || seeds[0];
+  main.innerHTML = `
+    <div class="section-h"><h2>Visit any seed</h2><div class="sub">iframe-embed for inspection · same-origin = mesh works between this seed and the visited one</div></div>
+    <div class="visit-bar">
+      <select id="visitSelect">
+        ${seeds.map(s => `<option value="${esc(s.name)}" ${s.name===state.visitTarget?'selected':''}>${esc(s.name)} · L${s.level??'tool'} · prime ${s.prime}</option>`).join('')}
+      </select>
+      <button class="btn brass sm" onclick="loadVisit()">load →</button>
+      <a class="btn sm" href="${esc(target.url)}" target="_blank" rel="noopener">↗ open in new tab</a>
+    </div>
+    <div class="iframe-wrap">
+      <iframe src="${esc(target.url)}" loading="lazy"></iframe>
+    </div>
+    <div class="card" style="margin-top:12px">
+      <p style="font-size:12px;color:var(--cream-dim)"><b style="color:var(--brass)">Mesh note:</b> because fallseed-meta and the embedded seed are both on sjgant80-hub.github.io (same origin), they should appear in each other's <i>Fellow seeds online</i> list (in the seed's Inspect / Mesh tab) within a few seconds.</p>
+    </div>
+  `;
+}
+window.loadVisit = function() {
+  state.visitTarget = $('#visitSelect').value;
+  render();
+};
+
+// ─── BUILD / PROVIDERS / INSPECT / SETTINGS / INSTALL (shared shape) ───
+function renderBuild(main) {
+  main.innerHTML = `
+    <div class="section-h"><h2>Build</h2><div class="sub">cascade for one-off generation</div></div>
+    <div class="card">
+      <h3>What do you need?</h3>
+      <textarea id="buildPrompt" rows="4" placeholder="Describe a new monitor view, a smoke-test variant, an alerting rule, anything…"></textarea>
+      <div style="display:flex;gap:8px;margin-top:10px"><button class="btn brass" id="buildGo">Generate →</button></div>
+    </div>
+    <div class="card"><h3>Output</h3><pre class="preview-area" id="buildOutput">(idle)</pre></div>
+  `;
+  $('#buildGo').addEventListener('click', async () => {
+    const p = $('#buildPrompt').value.trim(); if (!p) { toast('enter a prompt', true); return; }
+    const out = $('#buildOutput'); out.textContent = '';
+    try { await cascadeChat(p, { onChunk: d => { out.textContent += d; out.scrollTop = out.scrollHeight; } }); }
+    catch (e) { out.textContent = '✗ ' + e.message; }
+  });
+}
+function eligibleProviders() { return PROVIDERS.filter(p => state.providerConfig[p.id]?.enabled && (!p.requiresKey || state.providerConfig[p.id]?.key)).sort((a,b)=>a.priority-b.priority); }
+async function cascadeChat(prompt, opts) {
+  opts = opts||{}; const onChunk = opts.onChunk || (()=>{});
+  const system = 'You are a precise analyser for the FallSeed estate monitor. Output exactly what is asked, no preamble.';
+  const elig = eligibleProviders();
+  if (!elig.length) throw new Error('No providers enabled.');
+  for (const p of elig) {
+    try { return await callProvider(p, system, prompt, onChunk); } catch (e) { continue; }
+  }
+  throw new Error('all providers failed');
+}
+async function callProvider(p, system, prompt, onChunk) {
+  const cfg = state.providerConfig[p.id]||{}; const model = cfg.customModel || p.model;
+  if (p.id === 'webllm') throw new Error('WebLLM not implemented in meta');
+  if (p.id === 'google') {
+    const url = p.endpoint + '?alt=sse&key=' + encodeURIComponent(cfg.key);
+    const body = { systemInstruction:{parts:[{text:system}]}, contents:[{role:'user',parts:[{text:prompt}]}], generationConfig:{temperature:0.4,maxOutputTokens:4096} };
+    const r = await fetch(url, { method:'POST', headers:{'content-type':'application/json'}, body:JSON.stringify(body) });
+    if (!r.ok) throw new Error('Google ' + r.status); return await streamSSE(r, onChunk, 'google');
+  }
+  if (p.id === 'anthropic') {
+    const r = await fetch(p.endpoint, { method:'POST', headers:{'content-type':'application/json','x-api-key':cfg.key,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'}, body:JSON.stringify({ model, max_tokens:4096, stream:true, system, messages:[{role:'user',content:prompt}] }) });
+    if (!r.ok) throw new Error('Anthropic ' + r.status); return await streamSSE(r, onChunk, 'anthropic');
+  }
+  const headers = { 'content-type':'application/json' };
+  if (cfg.key) headers['authorization'] = 'Bearer ' + cfg.key;
+  const r = await fetch(p.endpoint, { method:'POST', headers, body:JSON.stringify({ model, messages:[{role:'system',content:system},{role:'user',content:prompt}], stream:true, temperature:0.4 }) });
+  if (!r.ok) throw new Error(p.name + ' ' + r.status);
+  return await streamSSE(r, onChunk, 'openai');
+}
+async function streamSSE(response, onChunk, kind) {
+  const reader = response.body.getReader(); const dec = new TextDecoder(); let buf='', acc='';
+  while(true) {
+    const {value,done} = await reader.read(); if (done) break;
+    buf += dec.decode(value, {stream:true});
+    const lines = buf.split(/\r?\n/); buf = lines.pop()||'';
+    for (const line of lines) {
+      if (!line.startsWith('data: ')) continue;
+      const data = line.slice(6).trim(); if (data === '[DONE]') continue;
+      try {
+        const j = JSON.parse(data); let d='';
+        if (kind === 'anthropic') { if (j.type === 'content_block_delta') d = j.delta?.text||''; }
+        else if (kind === 'google') { d = j.candidates?.[0]?.content?.parts?.[0]?.text||''; }
+        else { d = j.choices?.[0]?.delta?.content||''; }
+        if (d) { acc+=d; onChunk(d); }
+      } catch(e) {}
+    }
+  }
+  return acc;
+}
+
+function renderProviders(main) {
+  main.innerHTML = `
+    <div class="section-h"><h2>LLM providers</h2></div>
+    <div class="card">${PROVIDERS.map(p => {
+      const cfg = state.providerConfig[p.id]||{}; const tc = p.tier==='T1'?'t1':p.tier==='T2'?'t2':p.tier==='T3-free'?'tf':'tp';
+      return `<div class="provider-row"><div class="toggle ${cfg.enabled?'on':''}" onclick="toggleProvider('${p.id}')"></div><div class="tier-tag ${tc}">${p.tier}</div><div><div class="nm">${esc(p.name)}</div><div style="font-size:10px;color:var(--cream-muted);font-family:var(--mono);margin-top:2px;letter-spacing:.04em">${esc(p.note)}</div></div>${p.requiresKey?`<input class="key-input" type="password" value="${esc(cfg.key||'')}" placeholder="api key" onchange="setProviderKey('${p.id}', this.value)">`:'<div></div>'}<div class="status-mini">${p.requiresKey && !cfg.key?'<a href="'+(p.signupUrl||'#')+'" target="_blank" style="color:var(--brass)">sign up</a>':(cfg.enabled?'active':'off')}</div></div>`;
+    }).join('')}</div>
+  `;
+}
+window.toggleProvider = async function(id) { state.providerConfig[id].enabled = !state.providerConfig[id].enabled; await persistProviderConfig(); render(); };
+window.setProviderKey = async function(id, key) { state.providerConfig[id].key = key; await persistProviderConfig(); };
+
+function renderInspect(main) {
+  main.innerHTML = `
+    <div class="section-h"><h2>Inspect</h2></div>
+    <div class="inspect-grid">
+      <div class="inspect-card"><div class="num">${TOOL.prime}</div><div class="lbl">monitor prime</div></div>
+      <div class="inspect-card"><div class="num">${getSeeds().length}</div><div class="lbl">seeds tracked</div></div>
+      <div class="inspect-card"><div class="num">${window.__fellowSeeds.size}</div><div class="lbl">peers online</div></div>
+      <div class="inspect-card"><div class="num">${Object.values(state.smokeResults||{}).filter(r=>r.status==='pass').length}</div><div class="lbl">last smoke pass</div></div>
+    </div>
+    <div class="card" style="margin-top:18px">
+      <h3>About this tool</h3>
+      <p style="font-size:12px;color:var(--cream-dim);margin-bottom:8px">fallseed-meta is the <i>monitor seed</i> — the seed whose substrate is the lift hierarchy itself. It is to the FallSeed estate what an etcd dashboard is to a Kubernetes cluster: a window onto what exists, what's running, what's healthy.</p>
+      <p style="font-size:12px;color:var(--cream-dim);margin-bottom:8px">Read the <a href="https://www.ai-nativesolutions.com/spec.html" target="_blank" rel="noopener" style="color:var(--brass)">public spec</a> for the underlying Fork Seed primitive.</p>
+      <p style="font-size:11px;color:var(--cream-muted);font-family:var(--mono);letter-spacing:.06em">category <span style="color:var(--brass)">meta</span> · prime <span style="color:var(--brass)">${TOOL.prime}</span> · MIT</p>
+    </div>
+  `;
+}
+
+function renderSettings(main) {
+  main.innerHTML = `
+    <div class="section-h"><h2>Settings</h2></div>
+    <div class="card"><h3>Registry cache</h3><p style="font-size:12px;color:var(--cream-dim);margin-bottom:10px">Last fetched: ${state.registryFetchedAt ? new Date(state.registryFetchedAt).toLocaleString() : 'never'}</p><div style="display:flex;gap:8px"><button class="btn brass sm" onclick="fetchRegistry(true)">↻ force refresh</button><button class="btn sm" onclick="clearRegistry()">clear cache</button></div></div>
+    <div class="card"><h3>Wipe</h3><button class="btn danger sm" onclick="wipeAll()">⚠ wipe everything</button></div>
+  `;
+}
+window.clearRegistry = async function() { state.registry = null; state.registryFetchedAt = 0; await idbPut('config', null, 'registryCache'); await idbPut('config', 0, 'registryCacheAt'); toast('registry cache cleared'); render(); };
+window.wipeAll = async function() { if (!confirm('Wipe everything?')) return; await idbClear('smokeHistory'); state.smokeResults = {}; await persistProviderConfig(); toast('wiped'); render(); };
+
+function renderInstall(main) {
+  main.innerHTML = `
+    <div class="section-h"><h2>Install</h2></div>
+    <div class="card"><h3>Save as HTML</h3><p style="font-size:12px;color:var(--cream-dim);margin-bottom:10px">Right-click → Save As. The monitor keeps working even if sjgant80-hub goes dark — it will just show stale registry data.</p></div>
+    <div class="card"><h3>Install as PWA</h3><p style="font-size:12px;color:var(--cream-dim);margin-bottom:10px">Chrome / Edge: ⊕ in address bar. iOS/Android: Share → Add to Home Screen. Works offline; the live registry refreshes on next visit.</p></div>
+  `;
+}
+
+// ─── BOOT ──────────────────────────────────────────────
+async function boot() {
+  await openDB(); await loadAll(); initMesh(); await autoDetectLocal();
+  renderNav();
+  // Auto-fetch registry if stale (>5 min) or missing
+  if (!state.registry || (Date.now() - state.registryFetchedAt > 5*60*1000)) {
+    fetchRegistry(false);
+  }
+  render();
+}
+boot().catch(e => { console.error(e); document.body.insertAdjacentHTML('beforeend', '<div style="position:fixed;bottom:20px;left:20px;background:#8b1a1a;color:#fff;padding:14px 18px;border-radius:4px;z-index:9999;font-family:monospace">boot failed: '+e.message+'</div>'); });
+</script>
+</body>
+</html>
