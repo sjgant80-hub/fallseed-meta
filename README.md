@@ -29,7 +29,7 @@ fallseed-meta is to the FallSeed estate what an etcd dashboard is to a Kubernete
 
 ## Cosmology
 
-Prime **1279**, spine-clean mod 127 = 9 = 3². Category **meta** (not a level in the lift hierarchy — it's the *observer* of the hierarchy). Mesh channel `fall-meta`. Seal **◊·κ=1**.
+Prime **1279**, spine-clean mod 127 = 9 = 3². Category **meta** (not a level in the lift hierarchy — it's the *observer* of the hierarchy). Mesh channel `fall-meta`. Seal ****.
 
 ## When this becomes most useful
 
